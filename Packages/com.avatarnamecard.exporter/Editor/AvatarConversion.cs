@@ -28,7 +28,7 @@ namespace AvatarNamecard.Exporter
             return F(s, name) * (c != null && c.length > 0 ? c.Evaluate(t) : 1);
         }
 
-        public static AvatarDefinition Convert(GameObject avatar, List<string> warnings)
+        public static AvatarDefinition Convert(GameObject avatar, List<string> warnings, bool autoExtractExpressions = true)
         {
             var root = avatar.transform;
             var all = avatar.GetComponentsInChildren<Component>(true).Where(c => c != null).ToArray();
@@ -39,36 +39,44 @@ namespace AvatarNamecard.Exporter
             if (descriptor != null)
             {
                 var s = new SerializedObject(descriptor);
-                var mesh = Ref<SkinnedMeshRenderer>(s, "VisemeSkinnedMesh");
-                var visemes = s.FindProperty("VisemeBlendShapes");
-                var ids = new[] { 10, 12, 14, 11, 13 };
-                var presets = new[] { "aa", "ih", "ou", "ee", "oh" };
-                if (mesh != null && mesh.sharedMesh != null && visemes != null)
-                    for (var i = 0; i < ids.Length; i++)
-                        if (visemes.arraySize > ids[i]) AddExpression(expressions, root, mesh, visemes.GetArrayElementAtIndex(ids[i]).stringValue, presets[i], presets[i]);
-                var eyelids = Ref<SkinnedMeshRenderer>(s, "customEyeLookSettings.eyelidsSkinnedMesh");
-                var blink = s.FindProperty("customEyeLookSettings.eyelidsBlendshapes");
-                if (eyelids != null && eyelids.sharedMesh != null && blink != null && blink.arraySize > 0)
+                if (autoExtractExpressions)
                 {
-                    var index = blink.GetArrayElementAtIndex(0).intValue;
-                    if (index >= 0 && index < eyelids.sharedMesh.blendShapeCount)
-                        AddExpression(expressions, root, eyelids, eyelids.sharedMesh.GetBlendShapeName(index), "blink", "blink");
+                    var mesh = Ref<SkinnedMeshRenderer>(s, "VisemeSkinnedMesh");
+                    var visemes = s.FindProperty("VisemeBlendShapes");
+                    var ids = new[] { 10, 12, 14, 11, 13 };
+                    var presets = new[] { "aa", "ih", "ou", "ee", "oh" };
+                    if (mesh != null && mesh.sharedMesh != null && visemes != null)
+                        for (var i = 0; i < ids.Length; i++)
+                            if (visemes.arraySize > ids[i]) AddExpression(expressions, root, mesh, visemes.GetArrayElementAtIndex(ids[i]).stringValue, presets[i], presets[i]);
+                    var eyelids = Ref<SkinnedMeshRenderer>(s, "customEyeLookSettings.eyelidsSkinnedMesh");
+                    var blink = s.FindProperty("customEyeLookSettings.eyelidsBlendshapes");
+                    if (eyelids != null && eyelids.sharedMesh != null && blink != null && blink.arraySize > 0)
+                    {
+                        var index = blink.GetArrayElementAtIndex(0).intValue;
+                        if (index >= 0 && index < eyelids.sharedMesh.blendShapeCount)
+                            AddExpression(expressions, root, eyelids, eyelids.sharedMesh.GetBlendShapeName(index), "blink", "blink");
+                    }
                 }
                 var left = Ref<Transform>(s, "customEyeLookSettings.leftEye");
                 var right = Ref<Transform>(s, "customEyeLookSettings.rightEye");
                 definition.leftEye = left != null ? AvatarExporter.PathOf(root, left) : null;
                 definition.rightEye = right != null ? AvatarExporter.PathOf(root, right) : null;
-                warnings.Add("Eye bones and blink/viseme bindings converted. Eye angle ranges use app defaults; bone eyelids and jaw-bone lip sync are not converted.");
+                warnings.Add(autoExtractExpressions
+                    ? "Eye bones and blink/viseme bindings converted. Eye angle ranges use app defaults; bone eyelids and jaw-bone lip sync are not converted."
+                    : "Eye bones converted. Eye angle ranges use app defaults; automatic expression extraction is disabled.");
             }
-            // Explicit, editable candidates. Do not guess emotion names from arbitrary FX graphs.
-            foreach (var mesh in avatar.GetComponentsInChildren<SkinnedMeshRenderer>(true))
-                if (mesh.sharedMesh != null && mesh.gameObject.activeInHierarchy)
-                    for (var i = 0; i < mesh.sharedMesh.blendShapeCount; i++)
-                    {
-                        var name = mesh.sharedMesh.GetBlendShapeName(i);
-                        if (name.IndexOf("happy", StringComparison.OrdinalIgnoreCase) >= 0 || name.IndexOf("smile", StringComparison.OrdinalIgnoreCase) >= 0 || name.IndexOf("angry", StringComparison.OrdinalIgnoreCase) >= 0 || name.IndexOf("sad", StringComparison.OrdinalIgnoreCase) >= 0)
-                            AddExpression(expressions, root, mesh, name, mesh.name + "/" + name, null);
-                    }
+            if (autoExtractExpressions)
+            {
+                // Explicit, editable candidates. Do not guess emotion names from arbitrary FX graphs.
+                foreach (var mesh in avatar.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+                    if (mesh.sharedMesh != null && mesh.gameObject.activeInHierarchy)
+                        for (var i = 0; i < mesh.sharedMesh.blendShapeCount; i++)
+                        {
+                            var name = mesh.sharedMesh.GetBlendShapeName(i);
+                            if (name.IndexOf("happy", StringComparison.OrdinalIgnoreCase) >= 0 || name.IndexOf("smile", StringComparison.OrdinalIgnoreCase) >= 0 || name.IndexOf("angry", StringComparison.OrdinalIgnoreCase) >= 0 || name.IndexOf("sad", StringComparison.OrdinalIgnoreCase) >= 0)
+                                AddExpression(expressions, root, mesh, name, mesh.name + "/" + name, null);
+                        }
+            }
             definition.expressions = expressions.GroupBy(e => e.name).Select(g => g.First()).ToArray();
             var colliders = new List<AvatarCollider>();
             var colliderIds = new Dictionary<Component, int>();

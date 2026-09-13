@@ -1,16 +1,14 @@
-MEISHI Pop Exporterの公開テスト版です。
+MEISHI Pop Exporter v0.2.3（公開テスト版）
 
-- VCC / VPMでのインストールと更新に対応しました。
-- Unitypackageも同時配布します。共通形式パッケージを含みます。
-- NDMFのビルド結果、元シェーダー、PhysBoneの角度制限・重力、追加の静止表情を変換します。
-- 旧PhysBone 1.0で1を超える重力が設定されているアバターに対応しました。MEISHI Pop!アプリ側も対応版が必要です。
+- 「表情を自動抽出する」チェックボックスを追加しました（初期値オン）。
+- オフにすると、母音5種・瞬き・happy / smile / angry / sadを含むBlendShape名からの自動抽出を停止します。
+- 手動で追加したAnimationClipの表情は、オフでも出力されます。眼球ボーンの変換も維持します。
 
-**Unitypackageで導入する場合：** `MEISHI-Pop-Exporter-0.2.2.unitypackage` を使用してください。VRCSDKとNDMFは事前に導入が必要です。
+ファイル形式は変更していないため、MEISHI Pop!アプリの更新は不要です。設定を反映するには再エクスポートして、アプリで新しいファイルを読み直してください。
 
-**VCCで導入する場合：** https://vpm.pipipigiken.jp/ の「VCCに追加する」を使用してください。
+**VCC / VPM：** Manage ProjectからMEISHI Pop Exporterを0.2.3へ更新してください。
+**Unitypackage：** `MEISHI-Pop-Exporter-0.2.3.unitypackage` をインポートしてください。VRCSDKとNDMFは事前に導入が必要です。VPM版を導入済みの場合はVCCから更新してください。
 
-Unity 2022.3 / Built-in向け。iPhone用書き出しには同じEditorバージョンのiOS Build Supportが必要です。
+検証：Unity 2022.3.22f1でコンパイル成功、表情関連9テスト成功。今回の変更に対するiPhone実機確認は未実施です。別の既存シェーダー設定テスト2件はテスト内の設定保存APIで失敗し、サンプル環境ではNDMF previewのHarmony初期化エラーも確認しています。
 
-エクスポーターの配布ライセンスは検討中です。
-
-配布リポジトリを `orange3134/meishi-pop-exporter` に移行しました。機能とパッケージIDは変更していません。
+Unity 2022.3 / Built-in向け。エクスポーターの配布ライセンスは検討中です。

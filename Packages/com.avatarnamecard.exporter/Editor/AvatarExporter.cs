@@ -20,6 +20,7 @@ namespace AvatarNamecard.Exporter
     public sealed class AvatarExporterWindow : EditorWindow
     {
         [SerializeField] private GameObject avatar;
+        [SerializeField] private bool autoExtractExpressions = true;
         [SerializeField] private List<ExportExpression> expressions = new List<ExportExpression>();
         private ExportExpression previewExpression;
         private readonly AvatarExpressionPreview expressionPreview = new AvatarExpressionPreview();
@@ -37,6 +38,8 @@ namespace AvatarNamecard.Exporter
             avatar = (GameObject)EditorGUILayout.ObjectField("Avatar", avatar != null ? avatar : Selection.activeGameObject, typeof(GameObject), true);
             target = (BuildTarget)EditorGUILayout.EnumPopup("Destination", target);
             EditorGUILayout.Space();
+            autoExtractExpressions = EditorGUILayout.ToggleLeft("表情を自動抽出する", autoExtractExpressions);
+            EditorGUILayout.HelpBox("母音・瞬きと、名前に happy / smile / angry / sad を含むBlendShapeが対象です。オフでも下で追加した表情は出力されます。", MessageType.Info);
             EditorGUILayout.LabelField("追加する表情", EditorStyles.boldLabel);
             for (var i = 0; i < expressions.Count; i++)
             {
@@ -76,7 +79,7 @@ namespace AvatarNamecard.Exporter
                     var path = EditorUtility.SaveFilePanel("Export Avatar", "", avatar.name, "mpavatar");
                     if (!string.IsNullOrEmpty(path))
                     {
-                        try { report = AvatarExporter.Export(avatar, path, target, expressions); }
+                        try { report = AvatarExporter.Export(avatar, path, target, expressions, autoExtractExpressions); }
                         catch (Exception ex) { report = ex.Message; Debug.LogException(ex); }
                     }
                 }
@@ -89,7 +92,7 @@ namespace AvatarNamecard.Exporter
     public static class AvatarExporter
     {
         internal static bool IsExporting;
-        public static string Export(GameObject source, string outputPath, BuildTarget target, IReadOnlyList<ExportExpression> expressions = null)
+        public static string Export(GameObject source, string outputPath, BuildTarget target, IReadOnlyList<ExportExpression> expressions = null, bool autoExtractExpressions = true)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (EditorApplication.isPlaying) throw new InvalidOperationException("Export from Edit Mode.");
@@ -121,7 +124,7 @@ namespace AvatarNamecard.Exporter
                 var animator = clone.GetComponent<Animator>();
                 if (animator == null || animator.avatar == null || !animator.avatar.isHuman || !animator.avatar.isValid)
                     throw new InvalidOperationException("A valid Humanoid Animator is required after NDMF processing.");
-                var definition = AvatarConversion.Convert(clone, warnings);
+                var definition = AvatarConversion.Convert(clone, warnings, autoExtractExpressions);
                 expressionExport.Extract(clone, definition, warnings);
                 // Animation controllers can retain SDK behaviours and clips. The app supplies its own motion controller.
                 foreach (var a in clone.GetComponentsInChildren<Animator>(true)) a.runtimeAnimatorController = null;

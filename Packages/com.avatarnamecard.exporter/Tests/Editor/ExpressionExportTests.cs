@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
@@ -68,6 +69,57 @@ namespace AvatarNamecard.Exporter.Tests
             using var export = new AvatarExpressionExport(new[]{new ExportExpression{name="Smile",clip=clip},new ExportExpression{name=" Smile ",clip=clip}});
             Assert.Throws<InvalidOperationException>(()=>export.Register(avatar));
             Assert.That(avatar.GetComponents<Component>().Length,Is.EqualTo(1));
+        }
+
+        private void ConfigureDescriptor()
+        {
+            var descriptorType = TypeCache.GetTypesDerivedFrom<Component>().First(t => t.Name == "VRCAvatarDescriptor");
+            var descriptor = new SerializedObject(avatar.AddComponent(descriptorType));
+            var face = avatar.transform.Find("Face");
+            var renderer = face.GetComponent<SkinnedMeshRenderer>();
+            descriptor.FindProperty("VisemeSkinnedMesh").objectReferenceValue = renderer;
+            var visemes = descriptor.FindProperty("VisemeBlendShapes");
+            visemes.arraySize = 15;
+            for (var i = 0; i < visemes.arraySize; i++) visemes.GetArrayElementAtIndex(i).stringValue = "Mouth";
+            descriptor.FindProperty("customEyeLookSettings.eyelidsSkinnedMesh").objectReferenceValue = renderer;
+            var blink = descriptor.FindProperty("customEyeLookSettings.eyelidsBlendshapes");
+            blink.arraySize = 1;
+            blink.GetArrayElementAtIndex(0).intValue = 0;
+            descriptor.FindProperty("customEyeLookSettings.leftEye").objectReferenceValue = face;
+            descriptor.FindProperty("customEyeLookSettings.rightEye").objectReferenceValue = face;
+            var layers = descriptor.FindProperty("baseAnimationLayers");
+            layers.arraySize = 1;
+            var type = layers.GetArrayElementAtIndex(0).FindPropertyRelative("type");
+            type.enumValueIndex = Array.IndexOf(type.enumNames, "FX");
+            layers.GetArrayElementAtIndex(0).FindPropertyRelative("isDefault").boolValue = true;
+            descriptor.ApplyModifiedPropertiesWithoutUndo();
+            mesh.AddBlendShapeFrame("Happy", 100, new Vector3[3], new Vector3[3], new Vector3[3]);
+        }
+
+        [Test] public void AutomaticExtractionRemainsEnabledByDefault()
+        {
+            ConfigureDescriptor();
+            var definition = AvatarConversion.Convert(avatar, new List<string>());
+            Assert.That(definition.expressions.Select(e => e.name), Is.EquivalentTo(new[] { "aa", "ih", "ou", "ee", "oh", "blink", "Face/Happy" }));
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void AutomaticExtractionTogglePreservesEyesAndExplicitClip(bool automatic)
+        {
+            ConfigureDescriptor();
+            using var export = new AvatarExpressionExport(new[] { new ExportExpression { name = "Custom", clip = clip } });
+            export.Register(avatar);
+            var warnings = new List<string>();
+            var definition = AvatarConversion.Convert(avatar, warnings, automatic);
+            Assert.That(definition.expressions.Length, Is.EqualTo(automatic ? 7 : 0));
+            Assert.That(definition.leftEye, Is.EqualTo("Face"));
+            Assert.That(definition.rightEye, Is.EqualTo("Face"));
+            export.Extract(avatar, definition, warnings);
+            Assert.That(definition.expressions.Length, Is.EqualTo(automatic ? 8 : 1));
+            var custom = definition.expressions.Single(e => e.name == "Custom");
+            Assert.That(custom.morphs.Length, Is.EqualTo(2));
+            Assert.That(custom.morphs.Sum(m => m.weight), Is.EqualTo(118).Within(.001));
         }
     }
 }

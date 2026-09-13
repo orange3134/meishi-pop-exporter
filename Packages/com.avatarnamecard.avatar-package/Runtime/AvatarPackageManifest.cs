@@ -10,7 +10,7 @@ namespace AvatarNamecard.AvatarPackage
         public const string IosShaderProfile = "ios-tiers-v1";
         public string format = "avatar-namecard";
         public int formatVersion = 1;
-        public string exporterVersion = "0.2.2";
+        public string exporterVersion = "0.2.3";
         public string unityVersion;
         public string target;
         public string renderPipeline = "BuiltIn";

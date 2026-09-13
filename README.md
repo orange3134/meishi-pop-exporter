@@ -29,7 +29,7 @@ VRCSDKとNDMFを先に導入し、[Releases](https://github.com/orange3134/meish
 
 1. UnityのEdit Modeで、Hierarchyからアバタールートを選択します。
 2. **MEISHI Pop → Export Avatar** を開きます。
-3. 追加の表情が必要なら表情名とAnimationClipを指定します。フレーム選択は自動です。「こだわり設定」で時刻を調整できます。
+3. 「表情を自動抽出する」は初期状態でオンです。母音・瞬き・名前からの表情候補が不要ならオフにします。追加の表情が必要なら表情名とAnimationClipを指定します。追加クリップは自動抽出がオフでも出力されます。フレーム選択は自動です。「こだわり設定」で時刻を調整できます。
 4. iPhone用は **iOS**、Mac Editor用は **StandaloneOSX** を選び、`.mpavatar` を書き出します。
 5. MEISHI Pop!でアバターを変更し、新しいファイルを読み込みます。元の出力ファイルの上書きだけでは、取り込み済みの名刺は更新されません。
 
