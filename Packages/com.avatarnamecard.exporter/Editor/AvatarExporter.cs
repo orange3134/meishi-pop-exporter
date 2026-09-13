@@ -20,6 +20,7 @@ namespace AvatarNamecard.Exporter
     public sealed class AvatarExporterWindow : EditorWindow
     {
         [SerializeField] private GameObject avatar;
+        [SerializeField] private Texture2D thumbnail;
         [SerializeField] private bool autoExtractExpressions = true;
         [SerializeField] private List<ExportExpression> expressions = new List<ExportExpression>();
         private ExportExpression previewExpression;
@@ -71,6 +72,7 @@ namespace AvatarNamecard.Exporter
             if (profile == null) return;
             autoExtractExpressions = profile.autoExtractExpressions;
             target = profile.target;
+            thumbnail = profile.thumbnail;
             expressions = AvatarExportProfile.CopyExpressions(profile.expressions);
             previewExpression = null;
             expressionPreview.Dispose();
@@ -80,7 +82,7 @@ namespace AvatarNamecard.Exporter
         {
             if (profile == null) return;
             editedProfiles.Add(profile);
-            profile.SetSettings(autoExtractExpressions, target, expressions);
+            profile.SetSettings(autoExtractExpressions, target, expressions, thumbnail);
             // Flush the recorded diff before saving so Undo remains valid after the disk write.
             Undo.FlushUndoRecordObjects();
             SaveProfileAsset();
@@ -96,6 +98,7 @@ namespace AvatarNamecard.Exporter
             var created = CreateInstance<AvatarExportProfile>();
             created.autoExtractExpressions = autoExtractExpressions;
             created.target = target;
+            created.thumbnail = thumbnail;
             created.expressions = AvatarExportProfile.CopyExpressions(expressions);
             AssetDatabase.CreateAsset(created, AssetDatabase.GenerateUniqueAssetPath(path));
             AssetDatabase.SaveAssetIfDirty(created);
@@ -133,6 +136,7 @@ namespace AvatarNamecard.Exporter
             DrawProfile();
             EditorGUI.BeginChangeCheck();
             target = (BuildTarget)EditorGUILayout.EnumPopup("Destination", target);
+            thumbnail = (Texture2D)EditorGUILayout.ObjectField("サムネイル画像（任意）", thumbnail, typeof(Texture2D), false);
             EditorGUILayout.Space();
             autoExtractExpressions = EditorGUILayout.ToggleLeft("表情を自動抽出する", autoExtractExpressions);
             EditorGUILayout.HelpBox("母音・瞬きと、名前に happy / smile / angry / sad を含むBlendShapeが自動で書き出されます。", MessageType.Info);
@@ -176,7 +180,7 @@ namespace AvatarNamecard.Exporter
                     var path = EditorUtility.SaveFilePanel("Export Avatar", "", avatar.name, "mpavatar");
                     if (!string.IsNullOrEmpty(path))
                     {
-                        try { report = AvatarExporter.Export(avatar, path, target, expressions, autoExtractExpressions); }
+                        try { report = AvatarExporter.Export(avatar, path, target, expressions, autoExtractExpressions, thumbnail); }
                         catch (Exception ex) { report = ex.Message; Debug.LogException(ex); }
                     }
                 }
@@ -189,7 +193,7 @@ namespace AvatarNamecard.Exporter
     public static class AvatarExporter
     {
         internal static bool IsExporting;
-        public static string Export(GameObject source, string outputPath, BuildTarget target, IReadOnlyList<ExportExpression> expressions = null, bool autoExtractExpressions = true)
+        public static string Export(GameObject source, string outputPath, BuildTarget target, IReadOnlyList<ExportExpression> expressions = null, bool autoExtractExpressions = true, Texture2D thumbnail = null)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (EditorApplication.isPlaying) throw new InvalidOperationException("Export from Edit Mode.");
@@ -198,6 +202,7 @@ namespace AvatarNamecard.Exporter
             if (!BuildPipeline.IsBuildTargetSupported(BuildPipeline.GetBuildTargetGroup(target), target))
                 throw new InvalidOperationException("Install the " + target + " Build Support module for this Unity version first.");
             if (GraphicsSettings.currentRenderPipeline != null) throw new InvalidOperationException("Built-in Render Pipeline is required.");
+            var thumbnailBase64 = AvatarThumbnailExport.Encode(thumbnail);
             var warnings = new List<string>();
             using var expressionExport = new AvatarExpressionExport(expressions);
             var session = Guid.NewGuid().ToString("N");
@@ -272,6 +277,7 @@ namespace AvatarNamecard.Exporter
                 var package = new AvatarPackageManifest
                 {
                     shaderProfile = IosShaderSettings.Profile, shaderTierSettings = IosShaderSettings.DescribeIos(),
+                    thumbnailPngBase64 = thumbnailBase64,
                     displayName = source.name, unityVersion = Application.unityVersion, target = target.ToString(),
                     graphicsApi = string.Join(",", PlayerSettings.GetGraphicsAPIs(target).Select(a => a.ToString())),
                     bundleSize = new FileInfo(bundlePath).Length, bundleSha256 = hash,

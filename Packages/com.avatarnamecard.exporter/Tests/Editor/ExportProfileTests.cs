@@ -15,6 +15,7 @@ namespace AvatarNamecard.Exporter.Tests
         private string previousProfile;
         private AvatarExporterWindow window;
         private AnimationClip clip;
+        private Texture2D thumbnail;
 
         [SetUp] public void SetUp()
         {
@@ -24,6 +25,8 @@ namespace AvatarNamecard.Exporter.Tests
             AssetDatabase.CreateFolder("Assets", Path.GetFileName(folder));
             clip = new AnimationClip();
             AssetDatabase.CreateAsset(clip, folder + "/Face.anim");
+            thumbnail = new Texture2D(8, 4);
+            AssetDatabase.CreateAsset(thumbnail, folder + "/Thumbnail.asset");
             window = ScriptableObject.CreateInstance<AvatarExporterWindow>();
         }
 
@@ -42,6 +45,7 @@ namespace AvatarNamecard.Exporter.Tests
             var settings = new SerializedObject(window);
             settings.FindProperty("autoExtractExpressions").boolValue = false;
             settings.FindProperty("target").intValue = (int)BuildTarget.StandaloneOSX;
+            settings.FindProperty("thumbnail").objectReferenceValue = thumbnail;
             var list = settings.FindProperty("expressions");
             list.arraySize = 2;
             for (var i = 0; i < 2; i++)
@@ -62,6 +66,7 @@ namespace AvatarNamecard.Exporter.Tests
             Assert.That(AssetDatabase.MoveAsset(folder + "/Face.anim", folder + "/Renamed.anim"), Is.Empty);
             AssetDatabase.ImportAsset(folder + "/Profile.asset", ImportAssetOptions.ForceUpdate);
             var loaded = AssetDatabase.LoadAssetAtPath<AvatarExportProfile>(folder + "/Profile.asset");
+            Assert.That(AssetDatabase.GetAssetPath(loaded.thumbnail), Is.EqualTo(folder + "/Thumbnail.asset"));
             Assert.That(loaded.autoExtractExpressions, Is.False);
             Assert.That(loaded.target, Is.EqualTo(BuildTarget.StandaloneOSX));
             Assert.That(loaded.expressions.ConvertAll(e => e.name), Is.EqualTo(new[] { "Face 0", "Face 1" }));
@@ -78,6 +83,7 @@ namespace AvatarNamecard.Exporter.Tests
             var copy = window.SaveNewProfile(folder + "/Profile.asset");
             Assert.That(AssetDatabase.GetAssetPath(copy), Is.Not.EqualTo(AssetDatabase.GetAssetPath(original)));
             Assert.That(copy.expressions[0], Is.Not.SameAs(original.expressions[0]));
+            Assert.That(copy.thumbnail, Is.SameAs(original.thumbnail));
             copy.expressions[0].name = "Changed";
             Assert.That(original.expressions[0].name, Is.EqualTo("Face 0"));
             Assert.That(copy.expressions[0].clip, Is.SameAs(original.expressions[0].clip));
@@ -113,14 +119,30 @@ namespace AvatarNamecard.Exporter.Tests
             Undo.PerformUndo();
             yield return null;
             yield return null;
+            Assert.That(profile.thumbnail, Is.Null);
             Assert.That(profile.expressions.Count, Is.Zero);
             Assert.That(new SerializedObject(window).FindProperty("expressions").arraySize, Is.Zero);
             Assert.That(File.ReadAllText(folder + "/Profile.asset"), Does.Not.Contain("Face 1"));
             Undo.PerformRedo();
             yield return null;
             yield return null;
+            Assert.That(AssetDatabase.GetAssetPath(profile.thumbnail), Is.EqualTo(folder + "/Thumbnail.asset"));
             Assert.That(profile.expressions.Count, Is.EqualTo(2));
             Assert.That(File.ReadAllText(folder + "/Profile.asset"), Does.Contain("Face 1"));
+        }
+
+        [Test] public void ThumbnailCanBeClearedAndRestoredWithUndo()
+        {
+            SetWindowSettings();
+            var profile = window.SaveNewProfile(folder + "/Profile.asset");
+            var settings = new SerializedObject(window);
+            settings.FindProperty("thumbnail").objectReferenceValue = null;
+            settings.ApplyModifiedPropertiesWithoutUndo();
+            window.CommitProfileSettings();
+            Assert.That(profile.thumbnail, Is.Null);
+            Undo.PerformUndo();
+            Assert.That(AssetDatabase.GetAssetPath(profile.thumbnail), Is.EqualTo(folder + "/Thumbnail.asset"));
+            Assert.That(AssetDatabase.GetAssetPath(new SerializedObject(window).FindProperty("thumbnail").objectReferenceValue), Is.EqualTo(folder + "/Thumbnail.asset"));
         }
 
         [Test] public void UndoAfterSwitchingProfilesAlsoSavesTheEditedProfile()

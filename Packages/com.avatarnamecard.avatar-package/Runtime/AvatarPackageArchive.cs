@@ -17,6 +17,7 @@ namespace AvatarNamecard.AvatarPackage
         public AvatarPackageManifest Manifest { get; private set; }
         public AvatarDefinition Definition { get; private set; }
         public string BundlePath { get; private set; }
+        public byte[] ThumbnailPng { get; private set; }
         private string directory;
 
         public static AvatarPackageArchive Open(string path, string cacheRoot, string target)
@@ -36,6 +37,7 @@ namespace AvatarNamecard.AvatarPackage
                 if (names.Count != 3) throw new InvalidDataException("The avatar package is incomplete.");
                 result.Manifest = JsonUtility.FromJson<AvatarPackageManifest>(ReadText(zip.GetEntry("manifest.json")));
                 ValidateManifest(result.Manifest, target);
+                result.ThumbnailPng = AvatarPackageThumbnail.Decode(result.Manifest.thumbnailPngBase64);
                 var definitionText = ReadText(zip.GetEntry("avatar.json"));
                 if (Hash(Encoding.UTF8.GetBytes(definitionText)) != result.Manifest.definitionSha256)
                     throw new InvalidDataException("Avatar settings checksum mismatch.");

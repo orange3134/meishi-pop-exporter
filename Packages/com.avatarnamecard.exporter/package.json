@@ -1,11 +1,11 @@
 {
   "name": "com.avatarnamecard.exporter",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "displayName": "MEISHI Pop Exporter",
   "description": "Exports an SDK-independent avatar with its original materials and shaders.",
   "unity": "2022.3",
   "vpmDependencies": {
-    "com.avatarnamecard.avatar-package": "0.2.4",
+    "com.avatarnamecard.avatar-package": "0.2.5",
     "com.vrchat.avatars": ">=3.10.5 <3.11.0-a",
     "nadena.dev.ndmf": ">=1.14.8 <2.0.0-a"
   },
@@ -17,7 +17,7 @@
   "documentationUrl": "https://github.com/orange3134/meishi-pop-exporter#readme",
   "changelogUrl": "https://github.com/orange3134/meishi-pop-exporter/releases",
   "license": "UNLICENSED",
-  "url": "https://github.com/orange3134/meishi-pop-exporter/releases/download/v0.2.4/com.avatarnamecard.exporter-0.2.4.zip",
+  "url": "https://github.com/orange3134/meishi-pop-exporter/releases/download/v0.2.5/com.avatarnamecard.exporter-0.2.5.zip",
   "legacyFolders": {
     "Assets/MEISHIPop/Exporter": "cc2df1a554f24346a74cf9f19899f6eb"
   }
