@@ -24,8 +24,103 @@ namespace AvatarNamecard.Exporter
         [SerializeField] private List<ExportExpression> expressions = new List<ExportExpression>();
         private ExportExpression previewExpression;
         private readonly AvatarExpressionPreview expressionPreview = new AvatarExpressionPreview();
-        private void OnDisable() => expressionPreview.Dispose();
-        private BuildTarget target = BuildTarget.iOS;
+        [SerializeField] private AvatarExportProfile profile;
+        private readonly HashSet<AvatarExportProfile> editedProfiles = new HashSet<AvatarExportProfile>();
+        [SerializeField] private BuildTarget target = BuildTarget.iOS;
+        internal static string LastProfileKey => "MEISHIPop.ExportProfile." + Application.dataPath;
+
+        private void OnEnable()
+        {
+            Undo.undoRedoPerformed += OnUndoRedo;
+            if (profile == null)
+                profile = AssetDatabase.LoadAssetAtPath<AvatarExportProfile>(AssetDatabase.GUIDToAssetPath(EditorPrefs.GetString(LastProfileKey, "")));
+            LoadProfile();
+        }
+
+        private void OnDisable()
+        {
+            Undo.undoRedoPerformed -= OnUndoRedo;
+            SaveProfileAsset();
+            expressionPreview.Dispose();
+        }
+
+        private void OnFocus() => LoadProfile();
+        private void OnUndoRedo()
+        {
+            LoadProfile();
+            if (profile != null) EditorUtility.SetDirty(profile);
+            SaveProfileAsset();
+            foreach (var edited in editedProfiles)
+                if (edited != null && AssetDatabase.Contains(edited)) AssetDatabase.SaveAssetIfDirty(edited);
+            Repaint();
+        }
+
+        internal void SelectProfile(AvatarExportProfile selected)
+        {
+            SaveProfileAsset();
+            profile = selected;
+            if (profile != null)
+                EditorPrefs.SetString(LastProfileKey, AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(profile)));
+            else
+                EditorPrefs.DeleteKey(LastProfileKey);
+            LoadProfile();
+        }
+
+        private void LoadProfile()
+        {
+            if (profile == null) return;
+            autoExtractExpressions = profile.autoExtractExpressions;
+            target = profile.target;
+            expressions = AvatarExportProfile.CopyExpressions(profile.expressions);
+            previewExpression = null;
+            expressionPreview.Dispose();
+        }
+
+        internal void CommitProfileSettings()
+        {
+            if (profile == null) return;
+            editedProfiles.Add(profile);
+            profile.SetSettings(autoExtractExpressions, target, expressions);
+            // Flush the recorded diff before saving so Undo remains valid after the disk write.
+            Undo.FlushUndoRecordObjects();
+            SaveProfileAsset();
+        }
+
+        private void SaveProfileAsset()
+        {
+            if (profile != null && AssetDatabase.Contains(profile)) AssetDatabase.SaveAssetIfDirty(profile);
+        }
+
+        internal AvatarExportProfile SaveNewProfile(string path)
+        {
+            var created = CreateInstance<AvatarExportProfile>();
+            created.autoExtractExpressions = autoExtractExpressions;
+            created.target = target;
+            created.expressions = AvatarExportProfile.CopyExpressions(expressions);
+            AssetDatabase.CreateAsset(created, AssetDatabase.GenerateUniqueAssetPath(path));
+            AssetDatabase.SaveAssetIfDirty(created);
+            SelectProfile(created);
+            return created;
+        }
+
+        private void DrawProfile()
+        {
+            var selected = (AvatarExportProfile)EditorGUILayout.ObjectField("プロファイル", profile, typeof(AvatarExportProfile), false);
+            if (selected != profile) SelectProfile(selected);
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                if (GUILayout.Button("新規保存")) CreateProfileFromDialog("Avatar Export Profile");
+                using (new EditorGUI.DisabledScope(profile == null))
+                    if (GUILayout.Button("複製")) CreateProfileFromDialog(profile.name + " Copy");
+            }
+            EditorGUILayout.LabelField(profile != null ? "変更は自動保存されます（Undo対応）" : "現在の設定は「新規保存」で保存できます", EditorStyles.miniLabel);
+        }
+
+        private void CreateProfileFromDialog(string defaultName)
+        {
+            var path = EditorUtility.SaveFilePanelInProject("書き出しプロファイルを保存", defaultName, "asset", "保存先を選択してください。");
+            if (!string.IsNullOrEmpty(path)) SaveNewProfile(path);
+        }
         private string report = "";
         private Vector2 scroll;
         [MenuItem("MEISHI Pop/Export Avatar")]
@@ -34,12 +129,13 @@ namespace AvatarNamecard.Exporter
         {
             scroll = EditorGUILayout.BeginScrollView(scroll);
             EditorGUILayout.LabelField("MEISHI Pop", EditorStyles.boldLabel);
-            EditorGUILayout.HelpBox("Exports the current outfit after NDMF processing. Materials and shaders are preserved. PhysBone is approximated with SpringBone. See the report for unsupported features.", MessageType.Info);
             avatar = (GameObject)EditorGUILayout.ObjectField("Avatar", avatar != null ? avatar : Selection.activeGameObject, typeof(GameObject), true);
+            DrawProfile();
+            EditorGUI.BeginChangeCheck();
             target = (BuildTarget)EditorGUILayout.EnumPopup("Destination", target);
             EditorGUILayout.Space();
             autoExtractExpressions = EditorGUILayout.ToggleLeft("表情を自動抽出する", autoExtractExpressions);
-            EditorGUILayout.HelpBox("母音・瞬きと、名前に happy / smile / angry / sad を含むBlendShapeが対象です。オフでも下で追加した表情は出力されます。", MessageType.Info);
+            EditorGUILayout.HelpBox("母音・瞬きと、名前に happy / smile / angry / sad を含むBlendShapeが自動で書き出されます。", MessageType.Info);
             EditorGUILayout.LabelField("追加する表情", EditorStyles.boldLabel);
             for (var i = 0; i < expressions.Count; i++)
             {
@@ -50,7 +146,7 @@ namespace AvatarNamecard.Exporter
                     {
                         expression.name = EditorGUILayout.TextField(expression.name, GUILayout.MinWidth(70));
                         expression.clip = (AnimationClip)EditorGUILayout.ObjectField(expression.clip, typeof(AnimationClip), false);
-                        if (GUILayout.Button("−", GUILayout.Width(24))) { expressions.RemoveAt(i--); expressionPreview.Dispose(); continue; }
+                        if (GUILayout.Button("−", GUILayout.Width(24))) { expressions.RemoveAt(i--); expressionPreview.Dispose(); GUI.changed = true; continue; }
                     }
                     var manual = EditorGUILayout.ToggleLeft("こだわり設定：採用フレームを調整", expression.manualTime);
                     if (manual && !expression.manualTime)
@@ -71,7 +167,8 @@ namespace AvatarNamecard.Exporter
                     }
                 }
             }
-            if (GUILayout.Button("＋ 表情を追加")) expressions.Add(new ExportExpression());
+            if (GUILayout.Button("＋ 表情を追加")) { expressions.Add(new ExportExpression()); GUI.changed = true; }
+            if (EditorGUI.EndChangeCheck()) CommitProfileSettings();
             using (new EditorGUI.DisabledScope(avatar == null || EditorApplication.isPlaying))
             {
                 if (GUILayout.Button("Export .mpavatar"))
