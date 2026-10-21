@@ -12,13 +12,19 @@
   },
   "unityRootGuid": "f894ff414832446291645178a15974c9",
   "packages": {
-    "com.avatarnamecard.avatar-package": {
+    "jp.pipipigiken.mpavatar-package": {
       "legacyPath": "Assets/MEISHIPop/PackageFormat",
-      "legacyGuid": "405e7c9e9171499da3c13ed7f72a90f3"
+      "legacyGuid": "405e7c9e9171499da3c13ed7f72a90f3",
+      "legacyPackages": [
+        "com.avatarnamecard.avatar-package"
+      ]
     },
-    "com.avatarnamecard.exporter": {
+    "jp.pipipigiken.mpexporter": {
       "legacyPath": "Assets/MEISHIPop/Exporter",
-      "legacyGuid": "cc2df1a554f24346a74cf9f19899f6eb"
+      "legacyGuid": "cc2df1a554f24346a74cf9f19899f6eb",
+      "legacyPackages": [
+        "com.avatarnamecard.exporter"
+      ]
     }
   }
 }

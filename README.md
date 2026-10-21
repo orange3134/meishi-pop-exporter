@@ -16,6 +16,10 @@ VRChatアバターのUnityプロジェクトから、MEISHI Pop!用の `.mpavata
 
 4. 対象プロジェクトの Manage Project で **MEISHI Pop Exporter** を追加します。**MEISHI Pop Package Format** は依存関係として自動導入されます。
 
+### v0.2.5以前からの更新
+
+v0.2.6でパッケージIDを `jp.pipipigiken.mpexporter` / `jp.pipipigiken.mpavatar-package` に変更しました。VCCでは新IDの **MEISHI Pop Exporter** を追加してください。旧IDの2パッケージを置換するための `legacyPackages` を設定しています（[VPMの仕様](https://vcc.docs.vrchat.com/vpm/packages/#vpm-manifest-additions)）。VCC上での実移行操作は未検証です。Unitypackage版は従来と同じフォルダーへ上書きします。スクリプトのGUID・型名を維持しているため、保存済みプロファイルの参照を引き継ぎます。
+
 ### Unitypackage
 
 VRCSDKとNDMFを先に導入し、[Releases](https://github.com/orange3134/meishi-pop-exporter/releases)から `MEISHI-Pop-Exporter-x.y.z.unitypackage` をダウンロードしてUnityへドラッグします。Exporterと共通パッケージをまとめて導入できます。
@@ -30,12 +34,18 @@ VRCSDKとNDMFを先に導入し、[Releases](https://github.com/orange3134/meish
 1. UnityのEdit Modeで、Hierarchyからアバタールートを選択します。
 2. **MEISHI Pop → Export Avatar** を開きます。
 3. 「表情を自動抽出する」は初期状態でオンです。母音・瞬き・名前からの表情候補が不要ならオフにします。追加の表情が必要なら表情名とAnimationClipを指定します。追加クリップは自動抽出がオフでも出力されます。フレーム選択は自動です。「こだわり設定」で時刻を調整できます。
-4. iPhone用は **iOS**、Mac Editor用は **StandaloneOSX** を選び、`.mpavatar` を書き出します。
+4. Destinationは初期状態・通常モードでは **iOS** 固定です。`.mpavatar` を書き出します。
 5. MEISHI Pop!でアバターを変更し、新しいファイルを読み込みます。元の出力ファイルの上書きだけでは、取り込み済みの名刺は更新されません。
 
 Unity **2022.3 / Built-in Render Pipeline** 向けです。iPhone用の出力には、そのUnity Editorと同じバージョンの **iOS Build Support** をUnity Hubから追加してください。プラットフォームごとに別ファイルが必要です。
 
 検証済みの書き出し環境：Unity 2022.3.22f1、VRCSDK 3.10.5、NDMF 1.14.8、Modular Avatar 1.18.7。SDK依存範囲は3.10.5以上、3.11未満です。iOS用Bundleの最終表示は実機で確認してください。
+
+## 開発用のDestination
+
+**MEISHI Pop > Exporter Developer Mode** をオンにすると、Destinationから **iOS / StandaloneOSX / StandaloneWindows64** を選べます。初期状態はオフで、設定はこのマシンのプロジェクトごとに保存されます。
+
+オフの間は、プロファイルの保存値がMac／Windows向けでもiOSへ出力します。元のDestinationは保持し、再びオンにすると復元します。通常モードで表情などを編集しても、保存済みの開発用Destinationは変更しません。
 
 ## 任意のサムネイル画像
 
@@ -72,8 +82,8 @@ Unity **2022.3 / Built-in Render Pipeline** 向けです。iPhone用の出力に
 
 | 内容 | 場所 |
 |---|---|
-| Exporter | `Packages/com.avatarnamecard.exporter` |
-| 共通形式 | `Packages/com.avatarnamecard.avatar-package` |
+| Exporter | `Packages/jp.pipipigiken.mpexporter` |
+| 共通形式 | `Packages/jp.pipipigiken.mpavatar-package` |
 | 配布用メタデータ・移行GUID | `distribution.json` |
 
 VCCの共通配布一覧は [orange3134/vpm](https://github.com/orange3134/vpm) が管理します。VCC追加URLは `https://vpm.pipipigiken.jp/vpm.json` のままです。このリポジトリには一覧生成・Pages公開の処理を置きません。

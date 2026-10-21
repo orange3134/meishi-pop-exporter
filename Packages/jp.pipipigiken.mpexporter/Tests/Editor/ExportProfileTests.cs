@@ -13,6 +13,8 @@ namespace AvatarNamecard.Exporter.Tests
     {
         private string folder;
         private string previousProfile;
+        private bool hadDeveloperMode;
+        private bool previousDeveloperMode;
         private AvatarExporterWindow window;
         private AnimationClip clip;
         private Texture2D thumbnail;
@@ -21,6 +23,9 @@ namespace AvatarNamecard.Exporter.Tests
         {
             previousProfile = EditorPrefs.GetString(AvatarExporterWindow.LastProfileKey, "");
             EditorPrefs.DeleteKey(AvatarExporterWindow.LastProfileKey);
+            hadDeveloperMode = EditorPrefs.HasKey(AvatarExporterWindow.DeveloperModeKey);
+            previousDeveloperMode = AvatarExporterWindow.DeveloperMode;
+            EditorPrefs.DeleteKey(AvatarExporterWindow.DeveloperModeKey);
             folder = "Assets/MeishiPopProfileTest_" + Guid.NewGuid().ToString("N");
             AssetDatabase.CreateFolder("Assets", Path.GetFileName(folder));
             clip = new AnimationClip();
@@ -38,6 +43,47 @@ namespace AvatarNamecard.Exporter.Tests
             AssetDatabase.DeleteAsset(folder);
             if (string.IsNullOrEmpty(previousProfile)) EditorPrefs.DeleteKey(AvatarExporterWindow.LastProfileKey);
             else EditorPrefs.SetString(AvatarExporterWindow.LastProfileKey, previousProfile);
+            if (hadDeveloperMode) AvatarExporterWindow.DeveloperMode = previousDeveloperMode;
+            else EditorPrefs.DeleteKey(AvatarExporterWindow.DeveloperModeKey);
+        }
+
+        [Test] public void FreshWindowAndProfileDefaultToIosWithDeveloperModeOff()
+        {
+            Assert.That(AvatarExporterWindow.DeveloperMode, Is.False);
+            Assert.That(window.EffectiveTarget, Is.EqualTo(BuildTarget.iOS));
+            Assert.That(window.SaveNewProfile(folder + "/Default.asset").target, Is.EqualTo(BuildTarget.iOS));
+        }
+
+        [TestCase(BuildTarget.StandaloneOSX)]
+        [TestCase(BuildTarget.StandaloneWindows64)]
+        public void NormalModeUsesIosWithoutOverwritingDeveloperProfile(BuildTarget destination)
+        {
+            var saved = window.SaveNewProfile(folder + "/Developer.asset");
+            saved.SetSettings(false, destination, new ExportExpression[0]);
+            window.SelectProfile(saved);
+            Assert.That(window.EffectiveTarget, Is.EqualTo(BuildTarget.iOS));
+            window.CommitProfileSettings();
+            Assert.That(saved.target, Is.EqualTo(destination));
+            AvatarExporterWindow.DeveloperMode = true;
+            Assert.That(window.EffectiveTarget, Is.EqualTo(destination));
+            Object.DestroyImmediate(window);
+            window = ScriptableObject.CreateInstance<AvatarExporterWindow>();
+            Assert.That(AvatarExporterWindow.DeveloperMode, Is.True);
+            Assert.That(window.EffectiveTarget, Is.EqualTo(destination));
+            AvatarExporterWindow.DeveloperMode = false;
+            Assert.That(window.EffectiveTarget, Is.EqualTo(BuildTarget.iOS));
+            Assert.That(saved.target, Is.EqualTo(destination));
+        }
+
+        [Test] public void UnsupportedLegacyDestinationFallsBackToIos()
+        {
+            var saved = window.SaveNewProfile(folder + "/Unsupported.asset");
+            saved.SetSettings(true, BuildTarget.Android, new ExportExpression[0]);
+            window.SelectProfile(saved);
+            AvatarExporterWindow.DeveloperMode = true;
+            Assert.That(window.EffectiveTarget, Is.EqualTo(BuildTarget.iOS));
+            window.CommitProfileSettings();
+            Assert.That(saved.target, Is.EqualTo(BuildTarget.Android));
         }
 
         private void SetWindowSettings()

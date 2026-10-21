@@ -29,6 +29,34 @@ namespace AvatarNamecard.Exporter
         private readonly HashSet<AvatarExportProfile> editedProfiles = new HashSet<AvatarExportProfile>();
         [SerializeField] private BuildTarget target = BuildTarget.iOS;
         internal static string LastProfileKey => "MEISHIPop.ExportProfile." + Application.dataPath;
+        internal static string DeveloperModeKey => "MEISHIPop.Exporter.DeveloperMode." + Application.dataPath;
+        private const string DeveloperModeMenu = "MEISHI Pop/Exporter Developer Mode";
+        private static readonly string[] DestinationNames = { "iOS", "StandaloneOSX", "StandaloneWindows64" };
+        private static readonly int[] DestinationValues = { (int)BuildTarget.iOS, (int)BuildTarget.StandaloneOSX, (int)BuildTarget.StandaloneWindows64 };
+
+        internal static bool DeveloperMode
+        {
+            get => EditorPrefs.GetBool(DeveloperModeKey, false);
+            set
+            {
+                EditorPrefs.SetBool(DeveloperModeKey, value);
+                foreach (var window in Resources.FindObjectsOfTypeAll<AvatarExporterWindow>()) window.Repaint();
+            }
+        }
+
+        // Keep the profile's destination intact while normal mode always exports for iPhone.
+        internal BuildTarget EffectiveTarget => DeveloperMode && Array.IndexOf(DestinationValues, (int)target) >= 0
+            ? target : BuildTarget.iOS;
+
+        [MenuItem(DeveloperModeMenu)]
+        private static void ToggleDeveloperMode() => DeveloperMode = !DeveloperMode;
+
+        [MenuItem(DeveloperModeMenu, true)]
+        private static bool ValidateDeveloperMode()
+        {
+            Menu.SetChecked(DeveloperModeMenu, DeveloperMode);
+            return true;
+        }
 
         private void OnEnable()
         {
@@ -135,7 +163,14 @@ namespace AvatarNamecard.Exporter
             avatar = (GameObject)EditorGUILayout.ObjectField("Avatar", avatar != null ? avatar : Selection.activeGameObject, typeof(GameObject), true);
             DrawProfile();
             EditorGUI.BeginChangeCheck();
-            target = (BuildTarget)EditorGUILayout.EnumPopup("Destination", target);
+            if (DeveloperMode)
+            {
+                EditorGUI.BeginChangeCheck();
+                var selectedTarget = (BuildTarget)EditorGUILayout.IntPopup("Destination", (int)EffectiveTarget, DestinationNames, DestinationValues);
+                if (EditorGUI.EndChangeCheck()) target = selectedTarget;
+            }
+            else
+                EditorGUILayout.LabelField("Destination", "iOS");
             thumbnail = (Texture2D)EditorGUILayout.ObjectField("サムネイル画像（任意）", thumbnail, typeof(Texture2D), false);
             EditorGUILayout.Space();
             autoExtractExpressions = EditorGUILayout.ToggleLeft("表情を自動抽出する", autoExtractExpressions);
@@ -180,7 +215,7 @@ namespace AvatarNamecard.Exporter
                     var path = EditorUtility.SaveFilePanel("Export Avatar", "", avatar.name, "mpavatar");
                     if (!string.IsNullOrEmpty(path))
                     {
-                        try { report = AvatarExporter.Export(avatar, path, target, expressions, autoExtractExpressions, thumbnail); }
+                        try { report = AvatarExporter.Export(avatar, path, EffectiveTarget, expressions, autoExtractExpressions, thumbnail); }
                         catch (Exception ex) { report = ex.Message; Debug.LogException(ex); }
                     }
                 }

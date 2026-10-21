@@ -66,8 +66,8 @@ def build(output, tag=None):
     version = versions.pop()
     if tag is not None and tag != 'v' + version:
         raise ValueError(f'Tag {tag} does not match package version {version}')
-    exporter = manifests['com.avatarnamecard.exporter']
-    if exporter['vpmDependencies']['com.avatarnamecard.avatar-package'] != version:
+    exporter = manifests['jp.pipipigiken.mpexporter']
+    if exporter['vpmDependencies']['jp.pipipigiken.mpavatar-package'] != version:
         raise ValueError('Shared format dependency mismatch')
     for name, manifest in manifests.items():
         filename = f'{name}-{version}.zip'
@@ -77,6 +77,8 @@ def build(output, tag=None):
         migration = config['packages'][name]
         if manifest['legacyFolders'] != {migration['legacyPath']: migration['legacyGuid']}:
             raise ValueError('Unitypackage migration mismatch')
+        if manifest.get('legacyPackages') != migration['legacyPackages']:
+            raise ValueError('Legacy package migration mismatch')
         source, files = sources[name]
         with zipfile.ZipFile(output / filename, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
             for file in files:

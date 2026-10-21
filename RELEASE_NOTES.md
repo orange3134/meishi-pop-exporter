@@ -1,15 +1,13 @@
-MEISHI Pop Exporter v0.2.5（公開テスト版）
+MEISHI Pop Exporter v0.2.6（公開テスト版）
 
-- 「サムネイル画像（任意）」を追加しました。指定画像を`.mpavatar`に同梱し、アバター一覧で使用できます。
-- 未指定の場合は従来どおり、アバターを自動撮影します。
-- 画像は縦横比と透過を保ち、長辺512px以内のPNGに変換します。Read/Write設定の変更は不要です。
-- サムネイル画像のプロファイル保存・複製・Undo / Redoに対応しました。
+- パッケージIDを `jp.pipipigiken.mpexporter` / `jp.pipipigiken.mpavatar-package` に変更しました。
+- Destinationは初期状態・通常モードではiOS固定になりました。
+- **MEISHI Pop > Exporter Developer Mode** をオンにすると、iOS / StandaloneOSX / StandaloneWindows64を選べます。フラグは初期状態でオフで、マシンのプロジェクトごとに保存します。
+- 既存プロファイルのMac／Windows向けDestinationは保持されます。通常モードの実出力はiOSになり、開発モードで保存済みの選択が復元します。
 
-**使い方：** エクスポーターの「サムネイル画像（任意）」で画像を指定して書き出してください。変更後は、アプリで新しい`.mpavatar`を読み直します。名刺全体のサムネイル撮影は従来どおりです。
+**VCC / VPM：** 新IDのMEISHI Pop Exporterを追加してください。旧IDの2パッケージを置換するlegacyPackages設定を含みます。VCC上での実移行操作は未検証です。
+**Unitypackage：** `MEISHI-Pop-Exporter-0.2.6.unitypackage` をインポートしてください。従来のフォルダーとGUIDを維持しています。VPM版を導入済みの場合はVCCから導入してください。
 
-**VCC / VPM：** Manage ProjectからMEISHI Pop Exporterを0.2.5へ更新してください。
-**Unitypackage：** `MEISHI-Pop-Exporter-0.2.5.unitypackage` をインポートしてください。VRCSDKとNDMFは事前に導入が必要です。VPM版を導入済みの場合はVCCから更新してください。
+検証：Exporterはコンパイル成功、27件中25件成功（プロファイル11件はすべて成功）。既存シェーダー設定テスト2件はUnityのpersistent object保存エラーで失敗。アプリ側の関連76件、配布物の構造・GUID・依存関係・旧ID移行宣言・再現性の5件は成功。通常／開発モードの画面表示と切り替え後のConsole Error 0件を確認しました。
 
-検証：関連50テスト成功。画像の縮小・色・透過、プロファイル保存、実アバターBundleを使った指定画像と自動撮影の切り替え、同一Bundleの同時読み込み時の画像分離を確認しました。iPhone実機確認は未実施です。
-
-Unity 2022.3 / Built-in向け。エクスポーターの配布ライセンスは検討中です。
+Unity 2022.3 / Built-in向け。iPhone用の出力にはiOS Build Supportが必要です。今回の変更を使ったアバターの全再出力・iPhone実機確認は未実施です。エクスポーターの配布ライセンスは検討中です。

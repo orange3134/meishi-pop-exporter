@@ -8,8 +8,8 @@ import shutil
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCES = {
-    'com.avatarnamecard.avatar-package': 'Packages/com.avatarnamecard.avatar-package',
-    'com.avatarnamecard.exporter': 'Exporter~/com.avatarnamecard.exporter',
+    'jp.pipipigiken.mpavatar-package': 'Packages/jp.pipipigiken.mpavatar-package',
+    'jp.pipipigiken.mpexporter': 'Exporter~/jp.pipipigiken.mpexporter',
 }
 ALLOWED = {'.cs', '.asmdef', '.json', '.meta', '.md', '.txt'}
 
@@ -53,9 +53,10 @@ def main():
         manifest.pop('dependencies', None)  # VPM dependencies must not use the UPM registry.
         manifest['url'] = f"https://github.com/{config['repository']}/releases/download/v{version}/{name}-{version}.zip"
         manifest['legacyFolders'] = {config['packages'][name]['legacyPath']: config['packages'][name]['legacyGuid']}
-        if name.endswith('.exporter'):
+        manifest['legacyPackages'] = config['packages'][name]['legacyPackages']
+        if name == 'jp.pipipigiken.mpexporter':
             manifest['vpmDependencies'] = {
-                'com.avatarnamecard.avatar-package': version,
+                'jp.pipipigiken.mpavatar-package': version,
                 'com.vrchat.avatars': '>=3.10.5 <3.11.0-a',
                 'nadena.dev.ndmf': '>=1.14.8 <2.0.0-a',
             }
