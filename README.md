@@ -98,7 +98,7 @@ python3 -m unittest discover -s scripts -p 'test_*.py' -v
 python3 scripts/build_release.py
 ```
 
-`dist/` にVPM ZIP 2つ、Unitypackage 1つ、`vpm-release.json`、`SHA256SUMS.txt` ができます。Python 3.10以降の標準ライブラリだけで動作し、UnityライセンスやSDKの再配布は不要です。Unitypackageは元のmeta/GUIDを保持し、Runtime・Editorのみを同梱します。
+`dist/` にVPM ZIP 2つ、Unitypackage 1つ、`vpm-release.json`、`SHA256SUMS.txt` ができます。Python 3.10以降の標準ライブラリだけで動作し、UnityライセンスやSDKの再配布は不要です。Unitypackageは元のmeta/GUIDを保持し、Runtime・Editorとライセンス文書を同梱します。
 
 公開手順：
 
@@ -130,4 +130,8 @@ Release ExporterのActions結果画面にも、この案内を表示します。
 
 ## ライセンス
 
-公開テスト中です。エクスポーターの配布ライセンスは検討中で、現時点ではMIT等のオープンソースライセンスを付与していません。アバターや素材の権利・利用条件は各提供元に従ってください。
+MITライセンスは、公開する `jp.pipipigiken.mpexporter` と `jp.pipipigiken.mpavatar-package` の自作コードと付属文書にのみ適用します。各パッケージの `LICENSE.txt` に著作権表示とMIT全文、`LICENSE_SCOPE.md` に適用範囲を同梱しています。
+
+MEISHI Pop!アプリ全体、第三者のSDK・ライブラリ・アバター・テクスチャ・シェーダー・フォント等には適用しません。書き出した `.mpavatar` やAssetBundleの内容がMITになるわけではなく、元の素材・依存物のライセンスや利用条件が引き続き適用されます。製品名・ロゴの商標権の許諾も含みません。
+
+VPM ZIPでは直下、Unitypackageでは `Assets/MEISHIPop/Exporter/` と `Assets/MEISHIPop/PackageFormat/` に両文書が入ります。公開リポジトリ内の適用範囲は [LICENSE.md](LICENSE.md) を参照してください。

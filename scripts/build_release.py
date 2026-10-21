@@ -12,6 +12,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 ALLOWED = {'.cs', '.asmdef', '.json', '.meta', '.md', '.txt'}
+LICENSE_FILES = ('LICENSE.txt', 'LICENSE_SCOPE.md')
 
 
 def guid(meta):
@@ -46,6 +47,11 @@ def build(output, tag=None):
             raise ValueError('Unexpected package name')
         if not re.fullmatch(r'\d+\.\d+\.\d+', manifest['version']):
             raise ValueError('Release version must be x.y.z')
+        if manifest.get('license') != 'MIT':
+            raise ValueError(f'Expected MIT package license: {name}')
+        for filename in LICENSE_FILES:
+            if not (source / filename).is_file() or not (source / filename).read_text().strip():
+                raise ValueError(f'Missing license document: {name}/{filename}')
         files = sorted(p for p in source.rglob('*') if p.is_file())
         for p in source.rglob('*'):
             if p.is_symlink() or (p.is_file() and p.suffix not in ALLOWED):
@@ -107,7 +113,7 @@ def build(output, tag=None):
                 continue
             asset = meta.with_suffix('')
             relative = asset.relative_to(source)
-            if relative.parts[0] not in ('Runtime', 'Editor'):
+            if relative.parts[0] not in ('Runtime', 'Editor') and relative.as_posix() not in LICENSE_FILES:
                 continue
             add(legacy + '/' + relative.as_posix(), meta.read_bytes(), asset.read_bytes() if asset.is_file() else None)
     with (output / unity_name).open('wb') as raw:
