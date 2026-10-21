@@ -1,8 +1,10 @@
-MEISHI Pop Exporter v0.2.7
+MEISHI Pop Exporter v0.2.8
 
-- 公開する2パッケージの自作コードと付属文書をMITライセンスにしました。
-- VPM ZIPとUnitypackageの両方に、著作権表示・MIT全文のLICENSE.txtと、適用範囲を示すLICENSE_SCOPE.mdを同梱します。
-- 対象は `jp.pipipigiken.mpexporter` と `jp.pipipigiken.mpavatar-package` です。MEISHI Pop!アプリ全体、第三者素材・SDK、書き出されたアバターの権利はこの許諾に含みません。それぞれのライセンス・利用条件が引き続き適用されます。
-- Exporterの動作とファイル形式はv0.2.6から変更していません。
+- 追加表情のクリップを指定すると、「こだわり設定」がオフでも「プレビュー」で顔を確認できます。
+- 通常は自動選択されたフレームを表示します。「こだわり設定」をオンにすると、秒数スライダーで採用フレームを調整できます。
+- プレビューを開いたまま「こだわり設定」をオフに戻しても、表示を継続します。
+- プレビューは元アバターのBlendShapeを確認するものです。NDMFビルド後の衣装・シェーダー・ライティングの最終表示とは異なります。
 
-VCCで0.2.7に更新するか、MEISHI-Pop-Exporter-0.2.7.unitypackageを使用してください。公開済みの過去Releaseは差し替えません。
+表情・プロファイル関連EditModeテスト20件が成功し、Unity上で実アバターの自動フレームプレビューを確認しました。
+
+VCCで0.2.8に更新するか、MEISHI-Pop-Exporter-0.2.8.unitypackageを使用してください。

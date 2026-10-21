@@ -1,6 +1,6 @@
 {
   "name": "jp.pipipigiken.mpavatar-package",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "displayName": "MEISHI Pop Package Format",
   "description": "SDK-independent avatar package contract and validated archive reader.",
   "license": "MIT",
@@ -12,7 +12,7 @@
   },
   "documentationUrl": "https://github.com/orange3134/meishi-pop-exporter#readme",
   "changelogUrl": "https://github.com/orange3134/meishi-pop-exporter/releases",
-  "url": "https://github.com/orange3134/meishi-pop-exporter/releases/download/v0.2.7/jp.pipipigiken.mpavatar-package-0.2.7.zip",
+  "url": "https://github.com/orange3134/meishi-pop-exporter/releases/download/v0.2.8/jp.pipipigiken.mpavatar-package-0.2.8.zip",
   "legacyFolders": {
     "Assets/MEISHIPop/PackageFormat": "405e7c9e9171499da3c13ed7f72a90f3"
   },

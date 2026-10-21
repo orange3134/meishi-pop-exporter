@@ -195,8 +195,10 @@ namespace AvatarNamecard.Exporter
                     }
                     expression.manualTime = manual;
                     if (manual && expression.clip != null)
-                    {
                         expression.time = EditorGUILayout.Slider("時刻（秒）", expression.time, 0, expression.clip.length);
+
+                    if (expression.clip != null)
+                    {
                         if (GUILayout.Button("プレビュー")) previewExpression = expression;
                         if (previewExpression == expression)
                         {
