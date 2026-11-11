@@ -61,6 +61,7 @@ namespace AvatarNamecard.Exporter
         private void OnEnable()
         {
             Undo.undoRedoPerformed += OnUndoRedo;
+            expressionPreview.Invalidated += Repaint;
             if (profile == null)
                 profile = AssetDatabase.LoadAssetAtPath<AvatarExportProfile>(AssetDatabase.GUIDToAssetPath(EditorPrefs.GetString(LastProfileKey, "")));
             LoadProfile();
@@ -69,14 +70,20 @@ namespace AvatarNamecard.Exporter
         private void OnDisable()
         {
             Undo.undoRedoPerformed -= OnUndoRedo;
+            expressionPreview.Invalidated -= Repaint;
             SaveProfileAsset();
             expressionPreview.Dispose();
         }
 
-        private void OnFocus() => LoadProfile();
+        private void OnFocus()
+        {
+            LoadProfile();
+            expressionPreview.Invalidate();
+        }
         private void OnUndoRedo()
         {
             LoadProfile();
+            expressionPreview.Invalidate();
             if (profile != null) EditorUtility.SetDirty(profile);
             SaveProfileAsset();
             foreach (var edited in editedProfiles)
@@ -199,7 +206,11 @@ namespace AvatarNamecard.Exporter
 
                     if (expression.clip != null)
                     {
-                        if (GUILayout.Button("プレビュー")) previewExpression = expression;
+                        if (GUILayout.Button("プレビュー"))
+                        {
+                            previewExpression = expression;
+                            expressionPreview.Invalidate();
+                        }
                         if (previewExpression == expression)
                         {
                             expressionPreview.Draw(GUILayoutUtility.GetRect(180, 180), avatar, expression);
