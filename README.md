@@ -98,7 +98,7 @@ python3 -m unittest discover -s scripts -p 'test_*.py' -v
 python3 scripts/build_release.py
 ```
 
-`dist/` にVPM ZIP 2つ、Unitypackage 1つ、`vpm-release.json`、`SHA256SUMS.txt` ができます。Python 3.10以降の標準ライブラリだけで動作し、UnityライセンスやSDKの再配布は不要です。Unitypackageは元のmeta/GUIDを保持し、Runtime・Editorとライセンス文書を同梱します。
+`dist/` にVPM ZIP 2つ、Unitypackage 1つ、Booth用ZIP 1つ、`vpm-release.json`、`SHA256SUMS.txt` ができます。Python 3.10以降の標準ライブラリだけで動作し、UnityライセンスやSDKの再配布は不要です。Unitypackageは元のmeta/GUIDを保持し、Runtime・Editorとライセンス文書を同梱します。
 
 公開手順：
 
@@ -118,7 +118,7 @@ PR / mainへのpushでは **Validate Packages** が構造・GUID・ハッシュ�
 
 ## Boothでの配布
 
-タグ公開時にUnitypackageも自動生成され、GitHub ReleaseのAssetsへ添付されます。Boothにはこの `.unitypackage` を手動で登録してください。再生成だけならActionsの **Validate Packages → Run workflow** から実行できます。完了後の **booth-unitypackage** artifactを展開するとUnitypackageを取り出せます。詳細は [Booth配布手順](BOOTH.md) を参照してください。
+タグ公開時に `MEISHI-Pop-Exporter-X.Y.Z-Booth.zip` も自動生成され、GitHub ReleaseのAssetsへ添付されます。中身はUnitypackageとWindows用の `説明書.url` です。BoothにはこのBooth用ZIPをそのまま手動で登録してください。再生成だけならActionsの **Validate Packages → Run workflow** から実行できます。完了後の **booth-zip** artifactを1回展開すると、アップロード対象のBooth用ZIPを取り出せます。詳細は [Booth配布手順](BOOTH.md) を参照してください。
 
 ## VPM一覧への反映
 

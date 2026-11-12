@@ -21,11 +21,11 @@ jobs:
           name: exporter-packages
           path: dist/
           retention-days: 7
-      - name: Save Unitypackage for manual Booth upload
+      - name: Save ZIP for manual Booth upload
         uses: actions/upload-artifact@v4
         with:
-          name: booth-unitypackage
-          path: dist/*.unitypackage
+          name: booth-zip
+          path: dist/*-Booth.zip
           if-no-files-found: error
           retention-days: 30
       - name: Show Booth handoff
@@ -33,8 +33,20 @@ jobs:
           cat >> "$GITHUB_STEP_SUMMARY" <<'NOTE'
           ## Boothへの手動アップロード
 
-          Artifactsの **booth-unitypackage** をダウンロードして展開し、
-          中の **MEISHI-Pop-Exporter-*.unitypackage** をBoothの商品ファイルに登録してください。
+          Artifactsの **booth-zip** をダウンロードして展開し、
+          中の **MEISHI-Pop-Exporter-*-Booth.zip** をそのままBoothの商品ファイルに登録してください。
           Boothへのログイン・アップロード・公開は自動実行しません。
-          公開版はGitHub Releaseから同じUnitypackageを直接取得できます。
+          公開版はGitHub ReleaseからBooth用ZIPを直接取得できます。
           NOTE
+  validate-windows-shortcut:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m unittest discover -s scripts -p 'test_*.py' -v
+      - run: python scripts/build_release.py
+      - name: Verify ZIP extraction and Windows Internet Shortcut
+        shell: pwsh
+        run: ./scripts/test_booth_windows.ps1

@@ -38,3 +38,7 @@ macOS、Unity 2022.3.22f1、Built-in Render Pipeline、VRCSDK 3.10.5、NDMF 1.14
 Unitypackageのインポート、Editorの画面・表情プレビュー、iOS／Macの書き出しとアーカイブ検証、Mac AssetBundleのロードを確認した。iPhone実機での表示・揺れ物やWindows上のUnitypackage新規導入は今回未検証。
 
 検証環境の起動／Domain Reload時には、既存のNDMF／Modular AvatarのHarmony初期化由来の `mprotect returned EACCES` が発生する。起動ログと上記の操作区間を分けて確認した。検証用アバター、出力された.mpavatar、検証プロジェクトは配布物・公開リポジトリに含めない。
+
+## Booth用ZIP
+
+Booth用ZIPには、上記と同じUnitypackageと、指定URLを保存したWindows用の `説明書.url` を同梱する。配布テストでは内包Unitypackageのバイト一致、ショートカットのURL・改行、日本語ファイル名、ZIPのSHA-256・再現性を検証する。Windows CIではExpand-Archiveで展開し、WScript.ShellでURLを読み取る。Unitypackage本体は変わらないため、上記インポート・書き出し検証の対象と同一。

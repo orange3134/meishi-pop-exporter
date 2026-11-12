@@ -56,6 +56,27 @@ class PackagingTests(unittest.TestCase):
         for item in self.config['packages'].values():
             self.assertEqual(roots[item['legacyPath']], item['legacyGuid'])
 
+    def test_booth_zip_contains_tested_unitypackage_and_windows_manual_shortcut(self):
+        import configparser
+        booth = self.output / self.metadata['boothZip']
+        with zipfile.ZipFile(booth) as archive:
+            unity_name = self.metadata['unitypackage']
+            self.assertEqual(set(archive.namelist()), {unity_name, '説明書.url'})
+            self.assertEqual(archive.read(unity_name), (self.output / unity_name).read_bytes())
+            # UTF-8 filename flag prevents Japanese names from becoming mojibake on Windows.
+            self.assertTrue(archive.getinfo('説明書.url').flag_bits & 0x800)
+            shortcut = archive.read('説明書.url')
+            self.assertEqual(shortcut.count(b'\r\n'), 2)
+            parsed = configparser.ConfigParser(interpolation=None)
+            parsed.read_string(shortcut.decode('ascii'))
+            self.assertEqual(parsed['InternetShortcut']['URL'], self.config['booth']['manualUrl'])
+            self.assertEqual(list(parsed['InternetShortcut']), ['url'])
+            with tempfile.TemporaryDirectory() as temp:
+                archive.extractall(temp)
+                self.assertEqual((Path(temp) / '説明書.url').read_bytes(), shortcut)
+        checksum = hashlib.sha256(booth.read_bytes()).hexdigest()
+        self.assertIn(f'{checksum}  {booth.name}\n', (self.output / 'SHA256SUMS.txt').read_text())
+
     def test_renamed_packages_keep_dependencies_and_legacy_ids(self):
         expected = {
             'jp.pipipigiken.mpexporter': ['com.avatarnamecard.exporter'],

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build deterministic VPM ZIPs and a GUID-preserving Unitypackage without Unity."""
+"""Build deterministic VPM ZIPs, a GUID-preserving Unitypackage and a Booth ZIP without Unity."""
 import argparse
 import gzip
 import hashlib
@@ -124,11 +124,23 @@ def build(output, tag=None):
                     tar_entry(archive, value + '/asset.meta', meta)
                     if data is not None:
                         tar_entry(archive, value + '/asset', data)
-    metadata = {'version': version, 'packages': manifests, 'unitypackage': unity_name}
+    # Booth accepts a ZIP containing the Unitypackage and a Windows Internet Shortcut.
+    booth_name = f'MEISHI-Pop-Exporter-{version}-Booth.zip'
+    manual_url = config['booth']['manualUrl']
+    if not manual_url.startswith('https://') or any(c in manual_url for c in '\r\n'):
+        raise ValueError('Booth manual URL must be a single HTTPS URL')
+    shortcut = f'[InternetShortcut]\r\nURL={manual_url}\r\n'.encode('ascii')
+    with zipfile.ZipFile(output / booth_name, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
+        for name, data in ((unity_name, (output / unity_name).read_bytes()), ('説明書.url', shortcut)):
+            info = zipfile.ZipInfo(name, (2020, 1, 1, 0, 0, 0))
+            info.compress_type = zipfile.ZIP_DEFLATED
+            info.external_attr = 0o100644 << 16
+            archive.writestr(info, data)
+    metadata = {'version': version, 'packages': manifests, 'unitypackage': unity_name, 'boothZip': booth_name}
     (output / 'vpm-release.json').write_text(json.dumps(metadata, ensure_ascii=False, indent=2) + '\n')
-    paths = [output / f'{name}-{version}.zip' for name in manifests] + [output / unity_name, output / 'vpm-release.json']
+    paths = [output / f'{name}-{version}.zip' for name in manifests] + [output / unity_name, output / booth_name, output / 'vpm-release.json']
     (output / 'SHA256SUMS.txt').write_text(''.join(f'{hashlib.sha256(p.read_bytes()).hexdigest()}  {p.name}\n' for p in paths))
-    print(f'Built {version}: 2 VPM ZIPs, Unitypackage ({len(unity_assets)} assets), metadata and checksums')
+    print(f'Built {version}: 2 VPM ZIPs, Unitypackage ({len(unity_assets)} assets), Booth ZIP, metadata and checksums')
     return metadata
 
 
