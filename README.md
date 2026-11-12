@@ -130,8 +130,8 @@ Release ExporterのActions結果画面にも、この案内を表示します。
 
 ## ライセンス
 
-MITライセンスは、公開する `jp.pipipigiken.mpexporter` と `jp.pipipigiken.mpavatar-package` の自作コードと付属文書にのみ適用します。各パッケージの `LICENSE.txt` に著作権表示とMIT全文、`LICENSE_SCOPE.md` に適用範囲を同梱しています。
+Apache License 2.0は、公開する `jp.pipipigiken.mpexporter` と `jp.pipipigiken.mpavatar-package` の自作コードと付属文書にのみ適用します。各パッケージの `LICENSE.txt` にApache License 2.0全文、`NOTICE` に著作権表示、`LICENSE_SCOPE.md` に適用範囲を同梱しています。
 
-MEISHI Pop!アプリ全体、第三者のSDK・ライブラリ・アバター・テクスチャ・シェーダー・フォント等には適用しません。書き出した `.mpavatar` やAssetBundleの内容がMITになるわけではなく、元の素材・依存物のライセンスや利用条件が引き続き適用されます。製品名・ロゴの商標権の許諾も含みません。
+MEISHI Pop!アプリ全体、第三者のSDK・ライブラリ・アバター・テクスチャ・シェーダー・フォント等には適用しません。書き出した `.mpavatar` やAssetBundleの内容がApache License 2.0になるわけではなく、元の素材・依存物のライセンスや利用条件が引き続き適用されます。製品名・ロゴの商標権の許諾も含みません。
 
-VPM ZIPでは直下、Unitypackageでは `Assets/MEISHIPop/Exporter/` と `Assets/MEISHIPop/PackageFormat/` に両文書が入ります。公開リポジトリ内の適用範囲は [LICENSE.md](LICENSE.md) を参照してください。
+VPM ZIPでは直下、Unitypackageでは `Assets/MEISHIPop/Exporter/` と `Assets/MEISHIPop/PackageFormat/` に3文書が入ります。公開リポジトリ内の適用範囲は [LICENSE.md](LICENSE.md) を参照してください。

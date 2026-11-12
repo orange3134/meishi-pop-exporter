@@ -27,7 +27,7 @@ def main():
         if not (source / 'package.json').is_file():
             raise ValueError(f'Missing package: {name}')
         for file in files:
-            if file.is_symlink() or (file.is_file() and file.suffix not in ALLOWED):
+            if file.is_symlink() or (file.is_file() and file.suffix not in ALLOWED and file.name != 'NOTICE'):
                 raise ValueError(f'Unexpected source file: {file}')
         manifest = json.loads((source / 'package.json').read_text())
         if manifest['name'] != name:

@@ -34,7 +34,7 @@ class PackagingTests(unittest.TestCase):
                 self.assertNotIn('zipSHA256', json.loads(archive.read('package.json')))
                 root = self.config['packages'][name]['legacyPath']
                 for relative in archive.namelist():
-                    if (relative.startswith(('Runtime/', 'Editor/')) and not relative.endswith('.meta')) or relative in ('LICENSE.txt', 'LICENSE_SCOPE.md'):
+                    if (relative.startswith(('Runtime/', 'Editor/')) and not relative.endswith('.meta')) or relative in ('LICENSE.txt', 'LICENSE_SCOPE.md', 'NOTICE'):
                         expected[root + '/' + relative] = (archive.read(relative), archive.read(relative + '.meta'))
         actual = {}
         roots = {}
@@ -81,10 +81,11 @@ class PackagingTests(unittest.TestCase):
             for name, relative in sync_from_app.SOURCES.items():
                 package = source / relative
                 package.mkdir(parents=True)
-                manifest = {'name': name, 'version': '0.2.7', 'dependencies': {}, 'license': 'MIT'}
+                manifest = {'name': name, 'version': '0.2.7', 'dependencies': {}, 'license': 'Apache-2.0'}
                 (package / 'package.json').write_text(json.dumps(manifest))
                 (package / 'LICENSE.txt').write_text('test license')
                 (package / 'LICENSE_SCOPE.md').write_text('test scope')
+                (package / 'NOTICE').write_text('test notice')
             with patch.object(sync_from_app, 'ROOT', destination), patch('sys.argv', ['sync_from_app.py', '--source', str(source)]):
                 sync_from_app.main()
             manifest = json.loads((destination / 'Packages/jp.pipipigiken.mpexporter/package.json').read_text())
@@ -92,35 +93,38 @@ class PackagingTests(unittest.TestCase):
             self.assertIn('com.vrchat.avatars', manifest['vpmDependencies'])
             self.assertEqual(manifest['legacyPackages'], ['com.avatarnamecard.exporter'])
             self.assertNotIn('dependencies', manifest)
-            self.assertEqual(manifest['license'], 'MIT')
+            self.assertEqual(manifest['license'], 'Apache-2.0')
             for name in sync_from_app.SOURCES:
                 package = destination / 'Packages' / name
                 self.assertEqual((package / 'LICENSE.txt').read_text(), 'test license')
                 self.assertEqual((package / 'LICENSE_SCOPE.md').read_text(), 'test scope')
+                self.assertEqual((package / 'NOTICE').read_text(), 'test notice')
 
-    def test_both_distribution_formats_include_full_mit_and_scope(self):
+    def test_both_distribution_formats_include_full_apache_notice_and_scope(self):
         unity_files = {}
         with tarfile.open(self.output / self.metadata['unitypackage']) as archive:
             for entry in archive.getmembers():
                 if entry.name.endswith('/pathname'):
                     path = archive.extractfile(entry).read().decode()
-                    if path.endswith(('/LICENSE.txt', '/LICENSE_SCOPE.md')):
+                    if path.endswith(('/LICENSE.txt', '/LICENSE_SCOPE.md', '/NOTICE')):
                         unity_files[path] = archive.extractfile(entry.name.rsplit('/', 1)[0] + '/asset').read()
-        self.assertEqual(len(unity_files), 4)
+        self.assertEqual(len(unity_files), 6)
         for name, manifest in self.metadata['packages'].items():
-            self.assertEqual(manifest['license'], 'MIT')
+            self.assertEqual(manifest['license'], 'Apache-2.0')
             root = self.config['packages'][name]['legacyPath']
             with zipfile.ZipFile(self.output / manifest['url'].rsplit('/', 1)[-1]) as archive:
-                self.assertEqual(json.loads(archive.read('package.json'))['license'], 'MIT')
-                for filename in ('LICENSE.txt', 'LICENSE_SCOPE.md'):
+                self.assertEqual(json.loads(archive.read('package.json'))['license'], 'Apache-2.0')
+                for filename in ('LICENSE.txt', 'LICENSE_SCOPE.md', 'NOTICE'):
                     expected = (build_release.ROOT / 'Packages' / name / filename).read_bytes()
                     self.assertEqual(archive.read(filename), expected)
                     self.assertEqual(unity_files[root + '/' + filename], expected)
                 license_text = archive.read('LICENSE.txt').decode()
-                self.assertIn('Copyright (c) 2026 orange3134', license_text)
-                self.assertIn('Permission is hereby granted, free of charge', license_text)
-                self.assertIn('THE SOFTWARE IS PROVIDED "AS IS"', license_text)
-                self.assertTrue(license_text.endswith('SOFTWARE.\n'))
+                self.assertIn('Apache License', license_text)
+                self.assertIn('Version 2.0, January 2004', license_text)
+                self.assertIn('END OF TERMS AND CONDITIONS', license_text)
+                self.assertTrue(license_text.endswith('limitations under the License.\n'))
+                self.assertEqual(archive.read('NOTICE').decode(),
+                    'Copyright 2026 ピピピ技研/PiPiPi Giken https://pipipigiken.jp/\n')
                 self.assertIn('does not place the exported .mpavatar', archive.read('LICENSE_SCOPE.md').decode())
 
     def test_missing_license_or_wrong_declaration_blocks_release(self):
@@ -132,7 +136,7 @@ class PackagingTests(unittest.TestCase):
             shutil.copytree(build_release.ROOT / 'Packages', root / 'Packages')
             package = root / 'Packages/jp.pipipigiken.mpexporter'
             with patch.object(build_release, 'ROOT', root):
-                for filename in ('LICENSE.txt', 'LICENSE_SCOPE.md'):
+                for filename in ('LICENSE.txt', 'LICENSE_SCOPE.md', 'NOTICE'):
                     path = package / filename
                     original = path.read_bytes()
                     path.unlink()
@@ -143,7 +147,7 @@ class PackagingTests(unittest.TestCase):
                 data = json.loads(path.read_text())
                 data['license'] = 'UNLICENSED'
                 path.write_text(json.dumps(data))
-                with self.assertRaisesRegex(ValueError, 'Expected MIT'):
+                with self.assertRaisesRegex(ValueError, 'Expected Apache-2.0'):
                     build_release.build(root / 'output')
 
     def test_output_is_reproducible(self):

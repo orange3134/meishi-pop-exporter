@@ -12,7 +12,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 ALLOWED = {'.cs', '.asmdef', '.json', '.meta', '.md', '.txt'}
-LICENSE_FILES = ('LICENSE.txt', 'LICENSE_SCOPE.md')
+LICENSE_FILES = ('LICENSE.txt', 'LICENSE_SCOPE.md', 'NOTICE')
 
 
 def guid(meta):
@@ -47,14 +47,14 @@ def build(output, tag=None):
             raise ValueError('Unexpected package name')
         if not re.fullmatch(r'\d+\.\d+\.\d+', manifest['version']):
             raise ValueError('Release version must be x.y.z')
-        if manifest.get('license') != 'MIT':
-            raise ValueError(f'Expected MIT package license: {name}')
+        if manifest.get('license') != 'Apache-2.0':
+            raise ValueError(f'Expected Apache-2.0 package license: {name}')
         for filename in LICENSE_FILES:
-            if not (source / filename).is_file() or not (source / filename).read_text().strip():
+            if not (source / filename).is_file() or not (source / filename).read_text(encoding='utf-8').strip():
                 raise ValueError(f'Missing license document: {name}/{filename}')
         files = sorted(p for p in source.rglob('*') if p.is_file())
         for p in source.rglob('*'):
-            if p.is_symlink() or (p.is_file() and p.suffix not in ALLOWED):
+            if p.is_symlink() or (p.is_file() and p.suffix not in ALLOWED and p.name != 'NOTICE'):
                 raise ValueError(f'Unexpected package content: {p}')
         for file in files:
             if file.suffix == '.meta':
