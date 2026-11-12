@@ -116,6 +116,10 @@ git push origin vX.Y.Z
 
 PR / mainへのpushでは **Validate Packages** が構造・GUID・ハッシュ・移行先・再現性を確認し、配布ファイルをActionsのartifactとして保存します。
 
+## Boothでの配布
+
+タグ公開時にUnitypackageも自動生成され、GitHub ReleaseのAssetsへ添付されます。Boothにはこの `.unitypackage` を手動で登録してください。再生成だけならActionsの **Validate Packages → Run workflow** から実行できます。完了後の **booth-unitypackage** artifactを展開するとUnitypackageを取り出せます。詳細は [Booth配布手順](BOOTH.md) を参照してください。
+
 ## VPM一覧への反映
 
 Release公開後、[vpmリポジトリ](https://github.com/orange3134/vpm) が約1時間ごとに新しいバージョンを取り込みます（GitHubの混雑等で遅れる場合があります）。

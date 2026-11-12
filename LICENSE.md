@@ -5,7 +5,7 @@ The Apache License, Version 2.0 applies only to the original code and accompanyi
 - `Packages/jp.pipipigiken.mpexporter/` — [Apache 2.0 license text](Packages/jp.pipipigiken.mpexporter/LICENSE.txt)
 - `Packages/jp.pipipigiken.mpavatar-package/` — [Apache 2.0 license text](Packages/jp.pipipigiken.mpavatar-package/LICENSE.txt)
 
-The accompanying package documentation includes this repository's `README.md`, `RELEASE_NOTES.md`, and this notice. It is covered by the same Apache License, Version 2.0 and copyright notice. This is not a blanket Apache License 2.0 license for other files in this repository, including distribution scripts, workflow files, and distribution configuration.
+The accompanying package documentation includes this repository's `README.md`, `RELEASE_NOTES.md`, `BOOTH.md`, `UNITYPACKAGE_VALIDATION.md`, and this notice. It is covered by the same Apache License, Version 2.0 and copyright notice. This is not a blanket Apache License 2.0 license for other files in this repository, including distribution scripts, workflow files, and distribution configuration.
 
 The MEISHI Pop! application as a whole and third-party SDKs, libraries, avatars, textures, shaders, fonts, and other third-party materials are excluded. Their respective licenses and terms continue to apply. Exported avatar files and their contents are not relicensed under Apache License 2.0 by using these tools. No trademark rights in product names or logos are granted.
 

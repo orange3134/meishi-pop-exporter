@@ -1,5 +1,6 @@
 name: Validate Packages
 on:
+  workflow_dispatch:
   pull_request:
   push:
     branches: [main]
@@ -20,3 +21,20 @@ jobs:
           name: exporter-packages
           path: dist/
           retention-days: 7
+      - name: Save Unitypackage for manual Booth upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: booth-unitypackage
+          path: dist/*.unitypackage
+          if-no-files-found: error
+          retention-days: 30
+      - name: Show Booth handoff
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<'NOTE'
+          ## Boothへの手動アップロード
+
+          Artifactsの **booth-unitypackage** をダウンロードして展開し、
+          中の **MEISHI-Pop-Exporter-*.unitypackage** をBoothの商品ファイルに登録してください。
+          Boothへのログイン・アップロード・公開は自動実行しません。
+          公開版はGitHub Releaseから同じUnitypackageを直接取得できます。
+          NOTE

@@ -27,8 +27,10 @@ namespace AvatarNamecard.Exporter.Tests
                     foreach (var tier in new[] { GraphicsTier.Tier1, GraphicsTier.Tier2, GraphicsTier.Tier3 })
                         Assert.That(JsonUtility.ToJson(EditorGraphicsSettings.GetTierSettings(BuildTargetGroup.Standalone, tier)),
                             Is.EqualTo(JsonUtility.ToJson(EditorGraphicsSettings.GetTierSettings(BuildTargetGroup.iOS, tier))));
-                    // Simulate settings being saved by Unity during a build.
-                    UnityEditorInternal.InternalEditorUtility.SaveToSerializedFileAndForget(new[] { settings }, "ProjectSettings/GraphicsSettings.asset", true);
+                    // Simulate a build persisting changes without passing a persistent GraphicsSettings
+                    // object to SaveToSerializedFileAndForget (unsupported in Unity 2022.3).
+                    File.AppendAllText("ProjectSettings/GraphicsSettings.asset", "\n# Simulated settings write during bundle build\n");
+                    Assert.That(File.ReadAllBytes("ProjectSettings/GraphicsSettings.asset"), Is.Not.EqualTo(file));
                     if (fail) throw new InvalidOperationException("Simulated build failure");
                 }
             }
