@@ -41,4 +41,4 @@ Unitypackageのインポート、Editorの画面・表情プレビュー、iOS�
 
 ## Booth用ZIP
 
-Booth用ZIPには、上記と同じUnitypackageと、指定URLを保存したWindows用の `説明書.url` を同梱する。配布テストでは内包Unitypackageのバイト一致、ショートカットのURL・改行、日本語ファイル名、ZIPのSHA-256・再現性を検証する。Windows CIではExpand-Archiveで展開し、WScript.ShellでURLを読み取る。Unitypackage本体は変わらないため、上記インポート・書き出し検証の対象と同一。
+Booth用ZIPには、上記と同じUnitypackageと、指定URLを保存したWindows用の `説明書.url` を同梱する。配布テストでは内包Unitypackageのバイト一致、ショートカットのURL・改行、日本語ファイル名、ZIPのSHA-256・再現性を検証する。Windows CIではExpand-Archiveで展開し、Windows ExplorerのShell.Application（System.Link.TargetUrl）で日本語ファイル名のショートカットからURLを読み取る。Unitypackage本体は変わらないため、上記インポート・書き出し検証の対象と同一。

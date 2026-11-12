@@ -7,9 +7,14 @@ try {
     Expand-Archive -LiteralPath (Join-Path $repoRoot ('dist/' + $metadata.boothZip)) -DestinationPath $destination
     $shortcutPath = Join-Path $destination '説明書.url'
     if (-not (Test-Path -LiteralPath $shortcutPath)) { throw 'Japanese shortcut filename was not preserved' }
-    $shell = New-Object -ComObject WScript.Shell
-    $shortcut = $shell.CreateShortcut($shortcutPath)
-    if ($shortcut.TargetPath -cne $config.booth.manualUrl) { throw 'Windows parsed an unexpected shortcut URL' }
+    # Use Explorer's Unicode-capable property handler for the Japanese filename.
+    $shell = New-Object -ComObject Shell.Application
+    $folder = $shell.NameSpace($destination)
+    $item = $folder.ParseName('説明書.url')
+    $targetUrl = $item.ExtendedProperty('System.Link.TargetUrl')
+    if ($targetUrl -cne $config.booth.manualUrl) {
+        throw "Windows Explorer parsed an unexpected shortcut URL: '$targetUrl'"
+    }
     $actual = Get-FileHash -LiteralPath (Join-Path $destination $metadata.unitypackage) -Algorithm SHA256
     $expected = Get-FileHash -LiteralPath (Join-Path $repoRoot ('dist/' + $metadata.unitypackage)) -Algorithm SHA256
     if ($actual.Hash -ne $expected.Hash) { throw 'Unitypackage changed in the Booth ZIP' }
